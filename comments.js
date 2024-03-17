@@ -1,36 +1,22 @@
 // Create web server
-// create api
-// create comments api
-// get
-// post
-// delete
-
-const express = require('express');
-const bodyParser = require('body-parser');
-const cors = require('cors');
-const comments = require('./comments');
-
-const app = express();
-
-app.use(bodyParser.json());
-app.use(cors());
-
-app.get('/api/comments', (req, res) => {
-    res.json(comments.getComments());
+var http = require('http');
+var fs = require('fs');
+http.createServer(function (req, res) {
+    // read the file
+    fs.readFile('comments.html', function(err, data) {
+        res.writeHead(200, {'Content-Type': 'text/html'});
+        res.write(data);
+        res.end();
+    });
+}).listen(8080);
+// create server to listen to comments
+var WebSocketServer = require('ws').Server;
+var wss = new WebSocketServer({port: 8181});
+wss.on('connection', function(ws) {
+    ws.on('message', function(message) {
+        wss.clients.forEach(function(client) {
+            client.send(message);
+        });
+    });
 });
-
-app.post('/api/comments', (req, res) => {
-    const { name, comment } = req.body;
-    comments.addComment(name, comment);
-    res.json(comments.getComments());
-});
-
-app.delete('/api/comments/:id', (req, res) => {
-    const { id } = req.params;
-    comments.deleteComment(id);
-    res.json(comments.getComments());
-});
-
-app.listen(3000, () => {
-    console.log('Server is running on http://localhost:3000');
-});
+console.log('Server running');
